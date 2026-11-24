@@ -2,14 +2,23 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Défi Ponts - Technologie 5ème</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, sans-serif; }
-    body {
+    * {
+      box-sizing: border-box; margin: 0; padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    html, body {
       background: #1e293b; color: #f8fafc;
+      min-height: 100dvh; width: 100%;
+      overflow-x: hidden; overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+    }
+    body {
       display: flex; flex-direction: column; align-items: center;
-      height: 100vh; overflow: hidden; user-select: none;
     }
     header {
       width: 100%; max-width: 1120px; padding: 8px 12px;
@@ -21,6 +30,7 @@
       padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer;
       font-weight: 600; font-size: 13px; background: #334155; color: #f8fafc;
       transition: background 0.15s, opacity 0.15s;
+      -webkit-appearance: none; appearance: none;
     }
     button:hover:not(:disabled) { background: #475569; }
     button:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -30,7 +40,7 @@
     button.stop { background: #dc2626; }
     button.danger { background: #991b1b; }
     .stats {
-      font-size: 14px; font-weight: 700; padding: 4px 10px;
+      font-size: 13px; font-weight: 700; padding: 5px 10px;
       background: #1e293b; border-radius: 6px; border: 1px solid #475569;
     }
     .lock-badge {
@@ -40,23 +50,26 @@
     .lock-badge.visible { display: inline-block; }
 
     #main-area {
-      width: 100%; max-width: 1120px; flex: 1; min-height: 0;
-      display: flex; gap: 12px; padding: 10px; align-items: stretch;
+      width: 100%; max-width: 1120px; flex: 1;
+      display: flex; gap: 12px; padding: 10px; align-items: flex-start;
     }
     #canvas-wrap {
-      position: relative; flex: 1; min-width: 0;
-      display: flex; align-items: center; justify-content: center;
+      position: relative; flex: 1; min-width: 0; width: 100%;
     }
-    canvas {
-      width: 100%; height: auto; max-height: 100%; aspect-ratio: 16 / 9;
-      background: #e0f2fe; border-radius: 8px; touch-action: none;
+    .canvas-box {
+      position: relative; width: 100%; aspect-ratio: 16 / 9;
+      background: #e0f2fe; border-radius: 8px; overflow: hidden;
       box-shadow: 0 10px 25px rgba(0,0,0,0.4);
     }
+    canvas {
+      display: block; width: 100%; height: 100%;
+      touch-action: none;
+    }
     #banner {
-      position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
-      padding: 8px 18px; border-radius: 8px; font-weight: 800; font-size: 16px;
+      position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+      padding: 8px 16px; border-radius: 8px; font-weight: 800; font-size: 15px;
       display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.3); text-align: center;
-      pointer-events: none;
+      pointer-events: none; max-width: 90%; z-index: 5;
     }
     #banner.win { display: block; background: #16a34a; color: #fff; }
     #banner.fail { display: block; background: #dc2626; color: #fff; }
@@ -65,15 +78,15 @@
     #report-panel {
       width: 240px; flex-shrink: 0; background: #0f172a;
       border: 1px solid #334155; border-radius: 8px; padding: 12px;
-      display: flex; flex-direction: column; gap: 12px; overflow-y: auto;
+      display: flex; flex-direction: column; gap: 10px;
     }
     #report-panel h2 {
-      font-size: 15px; border-bottom: 1px solid #334155; padding-bottom: 6px;
+      font-size: 14px; border-bottom: 1px solid #334155; padding-bottom: 6px;
       color: #e2e8f0; text-transform: uppercase; letter-spacing: 0.5px;
     }
     .report-card {
       background: #1e293b; border: 1px solid #334155; border-radius: 6px;
-      padding: 10px; display: flex; flex-direction: column; gap: 6px;
+      padding: 10px; display: flex; flex-direction: column; gap: 5px;
     }
     .report-card h3 { font-size: 13px; color: #94a3b8; }
     .report-val { font-size: 15px; font-weight: 700; color: #cbd5e1; }
@@ -82,17 +95,32 @@
     .report-val.num { color: #38bdf8; }
     .report-sub { font-size: 12px; color: #94a3b8; }
     .reset-report {
-      margin-top: auto; font-size: 12px; background: #334155; color: #f8fafc;
+      margin-top: 4px; font-size: 12px; background: #334155; color: #f8fafc;
     }
 
     footer {
-      font-size: 12px; color: #94a3b8; padding: 4px 12px 8px; text-align: center;
+      font-size: 12px; color: #94a3b8; padding: 4px 12px 12px; text-align: center;
     }
 
-    @media (max-width: 720px) {
-      #main-area { flex-direction: column; }
+    /* Téléphone portrait */
+    @media (max-width: 760px) {
+      #main-area { flex-direction: column; padding: 8px; }
       #report-panel { width: 100%; flex-direction: row; flex-wrap: wrap; }
+      #report-panel h2 { width: 100%; }
       .report-card { flex: 1; min-width: 140px; }
+      .reset-report { width: 100%; }
+    }
+
+    /* Téléphone paysage : interface compacte + défilement libre */
+    @media (max-height: 500px) and (orientation: landscape) {
+      header { padding: 5px 8px; gap: 5px; }
+      button { padding: 4px 8px; font-size: 12px; }
+      .stats { font-size: 12px; padding: 4px 8px; }
+      #main-area { flex-direction: row; padding: 6px 8px; gap: 8px; }
+      #report-panel { width: 195px; padding: 8px; gap: 6px; flex-direction: column; }
+      .report-card { padding: 7px; gap: 3px; }
+      .report-val { font-size: 13px; }
+      footer { font-size: 11px; padding: 2px 8px 8px; }
     }
   </style>
 </head>
@@ -107,7 +135,7 @@
   <div class="group">
     <button id="tool-beam" class="active" onclick="setTool('beam')">🔨 Construire</button>
     <button id="tool-erase" onclick="setTool('erase')">❌ Gomme</button>
-    <span id="lock-badge" class="lock-badge">🔒 Pont verrouillé</span>
+    <span id="lock-badge" class="lock-badge">🔒 Verrouillé</span>
   </div>
 
   <div class="group">
@@ -119,8 +147,10 @@
 
 <div id="main-area">
   <div id="canvas-wrap">
-    <canvas id="game" width="800" height="450"></canvas>
-    <div id="banner"></div>
+    <div class="canvas-box">
+      <canvas id="game" width="800" height="450"></canvas>
+      <div id="banner"></div>
+    </div>
   </div>
 
   <aside id="report-panel">
@@ -143,7 +173,7 @@
 </div>
 
 <footer>
-  Pars d'un point d'appui ou d'un segment existant • Longueur max : 5 cases • Chaque niveau sauvegarde et verrouille son pont après test
+  Pars d'un point d'appui ou d'un segment existant • Longueur max : 5 cases • Chaque niveau verrouille son pont après test
 </footer>
 
 <script>
@@ -226,7 +256,6 @@ let isBridgeLocked = false;
 let simStatus = 'idle';
 let restoreTimer = null;
 
-// Mémoire indépendante pour chaque niveau (pont + état de verrouillage)
 let levelStates = [];
 
 function createEmptyLevelState(lvl) {
@@ -254,6 +283,7 @@ let truck = null;
 let loadBlock = null;
 
 let dragStart = null;
+let activePointerId = null;
 let pointerPos = { x: 0, y: 0 };
 let hoveredAnchor = null;
 
@@ -269,6 +299,7 @@ function updateLockUI() {
   lockBadge.classList.toggle('visible', isBridgeLocked);
   if (isBridgeLocked) {
     dragStart = null;
+    activePointerId = null;
     hoveredAnchor = null;
   }
 }
@@ -299,7 +330,6 @@ function updateReportUI() {
   }
 }
 
-// Sauvegarde le pont du niveau actuel et charge le pont du niveau cible
 function loadLevel(idx) {
   if (idx === currentLevelIdx) return;
   stopSim(true);
@@ -335,7 +365,6 @@ function clearBridge() {
   updateCostUI();
 }
 
-// Réinitialise les deux niveaux, déverrouille tout et remet le bilan à zéro
 function resetSession() {
   stopSim(true);
   levelStates = LEVELS.map(lvl => createEmptyLevelState(lvl));
@@ -381,7 +410,7 @@ function projectPointOnSegment(p, v, w) {
   return { x, y, t, dist: Math.hypot(p.x - x, p.y - y) };
 }
 
-function findExistingNodeNear(pos, maxDist = 20) {
+function findExistingNodeNear(pos, maxDist = 22) {
   let best = null;
   let bestDist = maxDist;
   for (let n of designNodes) {
@@ -394,7 +423,7 @@ function findExistingNodeNear(pos, maxDist = 20) {
   return best;
 }
 
-function findPointOnExistingBeam(pos, maxDist = 16) {
+function findPointOnExistingBeam(pos, maxDist = 18) {
   let best = null;
   let bestDist = maxDist;
   for (let b of designBeams) {
@@ -409,13 +438,13 @@ function findPointOnExistingBeam(pos, maxDist = 16) {
 }
 
 function findValidStartPoint(raw) {
-  const node = findExistingNodeNear(raw, 22);
+  const node = findExistingNodeNear(raw, 26);
   if (node) return { x: node.x, y: node.y };
-  return findPointOnExistingBeam(raw, 16);
+  return findPointOnExistingBeam(raw, 18);
 }
 
 function snapPointer(raw) {
-  const node = findExistingNodeNear(raw, 18);
+  const node = findExistingNodeNear(raw, 20);
   if (node) return { x: node.x, y: node.y };
 
   const gridPt = {
@@ -427,7 +456,7 @@ function snapPointer(raw) {
     return { x: onBeamFromGrid.x, y: onBeamFromGrid.y };
   }
 
-  const onBeam = findPointOnExistingBeam(raw, 14);
+  const onBeam = findPointOnExistingBeam(raw, 16);
   if (onBeam) return onBeam;
 
   return gridPt;
@@ -552,13 +581,21 @@ function cleanupOrphanNodes() {
   saveCurrentLevelState();
 }
 
+// ============================================================================
+// GESTION TACTILE / SOURIS COMPATIBLE SAFARI iOS
+// ============================================================================
+// Empêche Safari de faire défiler ou rebondir la page quand on touche le canvas
+canvas.addEventListener('touchstart', e => { e.preventDefault(); }, { passive: false });
+canvas.addEventListener('touchmove', e => { e.preventDefault(); }, { passive: false });
+
 canvas.addEventListener('pointerdown', e => {
-  if (isSimulating || isBridgeLocked) return;
+  if (!e.isPrimary || isSimulating || isBridgeLocked) return;
+  e.preventDefault();
   banner.className = '';
   const raw = getCanvasCoords(e);
 
   if (tool === 'erase') {
-    let bestIdx = -1, bestDist = 18;
+    let bestIdx = -1, bestDist = 22;
     designBeams.forEach((b, i) => {
       const proj = projectPointOnSegment(raw, designNodes[b.a], designNodes[b.b]);
       if (proj.dist < bestDist) { bestDist = proj.dist; bestIdx = i; }
@@ -574,25 +611,46 @@ canvas.addEventListener('pointerdown', e => {
   const startPt = findValidStartPoint(raw);
   if (!startPt) return;
 
+  activePointerId = e.pointerId;
+  try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
   dragStart = startPt;
   pointerPos = { x: startPt.x, y: startPt.y };
 });
 
 canvas.addEventListener('pointermove', e => {
-  if (isSimulating || isBridgeLocked) return;
+  if (!e.isPrimary || isSimulating || isBridgeLocked) return;
   const raw = getCanvasCoords(e);
-  hoveredAnchor = findValidStartPoint(raw);
-  pointerPos = snapPointer(raw);
+  if (dragStart && e.pointerId === activePointerId) {
+    e.preventDefault();
+    pointerPos = snapPointer(raw);
+  } else if (!dragStart) {
+    hoveredAnchor = findValidStartPoint(raw);
+    pointerPos = snapPointer(raw);
+  }
 });
 
-canvas.addEventListener('pointerup', () => {
-  if (isSimulating || isBridgeLocked || !dragStart || tool === 'erase') { dragStart = null; return; }
+function finishDrag(e) {
+  if (activePointerId !== null && e.pointerId !== activePointerId) return;
+  if (activePointerId !== null) {
+    try { canvas.releasePointerCapture(activePointerId); } catch (_) {}
+    activePointerId = null;
+  }
+  if (isSimulating || isBridgeLocked || !dragStart || tool === 'erase') {
+    dragStart = null;
+    return;
+  }
   const len = Math.hypot(pointerPos.x - dragStart.x, pointerPos.y - dragStart.y);
   if (len >= 15 && len <= MAX_BEAM_LEN) {
     addBeamWithTopology(dragStart, pointerPos);
     updateCostUI();
   }
   dragStart = null;
+}
+
+canvas.addEventListener('pointerup', finishDrag);
+canvas.addEventListener('pointercancel', () => {
+  dragStart = null;
+  activePointerId = null;
 });
 
 // ============================================================================
@@ -613,7 +671,7 @@ function toggleSim() {
 function startSim() {
   if (restoreTimer) { clearTimeout(restoreTimer); restoreTimer = null; }
   isSimulating = true;
-  isBridgeLocked = true; // Verrouille uniquement le pont du niveau en cours
+  isBridgeLocked = true;
   saveCurrentLevelState();
   updateLockUI();
 
